@@ -1,0 +1,43 @@
+name: Build Tahaddi Almalab APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'TahaddiAlMalab.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          mkdir source
+          unzip -q TahaddiAlMalab.zip -d source
+          echo "PROJECT_DIR=$(dirname "$(find source -name settings.gradle -print -quit)")" >> $GITHUB_ENV
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: TahaddiAlmalab-APK
+          path: ${{ env.PROJECT_DIR }}/app/build/outputs/apk/debug/*.apk
